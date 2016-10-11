@@ -24,7 +24,11 @@ io.on('connection', socket => {
   });
 
   socket.on('order', (party, product) => {
-    orders[party] = product;
+    if (product !== '') {
+      orders[party] = product;
+    } else {
+      delete orders[party];
+    }
     io.emit('orders', orders);
   });
 });
