@@ -6,23 +6,27 @@ const
   io = require('socket.io')(http),
   config = require('./config.js');
 
-let orders = {};
+let
+    orders = {},
+    products = config.products;
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
 io.on('connection', socket => {
+  io.emit('products', products);
   io.emit('orders', orders);
+
+  socket.on('product', product => {
+    products.push(product);
+    io.emit('products', products);
+  });
 
   socket.on('order', (party, product) => {
     orders[party] = product;
     io.emit('orders', orders);
   });
-});
-
-app.get('/products', (req, res) => {
-  res.send(config.products);
 });
 
 http.listen(3000, () => {

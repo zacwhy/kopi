@@ -1,24 +1,29 @@
 <!doctype html>
 <html>
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Orders</title>
   </head>
   <body>
     <form id="order">
       <input id="party" placeholder="Name" required />
-      <select id="product" required>
-        <option></option>
-      </select>
+      <select id="product" required></select>
       <button>Order</button>
     </form>
     <pre id="json"></pre>
+    <button id="addProduct">Add product</button>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
-fetch(new Request('products'))
-  .then(response => response.json())
-  .then(products => {
+init();
+
+function init() {
+  const socket = io();
+
+  socket.on('products', products => {
     const select = document.getElementById('product');
-    products.forEach(product => {
+    select.options.length = 0;
+    [''].concat(products).forEach(product => {
       const option = document.createElement('option');
       option.value = product;
       option.innerHTML = product;
@@ -26,19 +31,25 @@ fetch(new Request('products'))
     });
   });
 
-const socket = io();
+  socket.on('orders', orders => {
+    document.getElementById('json').innerHTML = JSON.stringify(orders, undefined, 2);
+  });
 
-document.getElementById('order').onsubmit = () => {
-  const
-    party = document.getElementById('party').value,
-    product = document.getElementById('product').value;
-  socket.emit('order', party, product);
-  return false;
-};
+  document.getElementById('addProduct').onclick = () => {
+    const name = prompt('Product name');
+    if (name !== null) {
+      socket.emit('product', name);
+    }
+  };
 
-socket.on('orders', orders => {
-  document.getElementById('json').innerHTML = JSON.stringify(orders, undefined, 2);
-});
+  document.getElementById('order').onsubmit = () => {
+    const
+      party = document.getElementById('party').value,
+      product = document.getElementById('product').value;
+    socket.emit('order', party, product);
+    return false;
+  };
+}
     </script>
   </body>
 </html>
