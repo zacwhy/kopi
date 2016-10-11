@@ -7,8 +7,8 @@ const
   config = require('./config.js');
 
 let
-    orders = {},
-    products = config.products;
+  orders = {},
+  products = config.products;
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
