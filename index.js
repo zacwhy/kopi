@@ -3,6 +3,7 @@
 const
   app = require('express')(),
   bodyParser = require('body-parser'),
+  express = require('express'),
   http = require('http').Server(app),
   io = require('socket.io')(http),
   config = require('./config.js');
@@ -11,6 +12,7 @@ let
   orders = {},
   products = config.products;
 
+app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
