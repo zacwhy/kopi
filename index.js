@@ -20,6 +20,15 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
+app.post('/product', (req, res) => {
+  const product = req.body.product;
+  if (products.indexOf(product) === -1) {
+    products.push(product);
+    emitProducts();
+  }
+  res.end();
+});
+
 app.post('/order', (req, res) => {
   const
     address = req.ip,
@@ -43,11 +52,6 @@ app.post('/order', (req, res) => {
 io.on('connection', socket => {
   emitProducts();
   emitOrders();
-
-  socket.on('product', product => {
-    products.push(product);
-    emitProducts();
-  });
 });
 
 http.listen(3000, () => {
