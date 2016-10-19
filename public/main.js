@@ -1,43 +1,62 @@
-const socket = io();
+'use strict';
 
-socket.on('products', products => {
-  const select = document.getElementById('product');
-  select.options.length = 0;
-  [''].concat(products).forEach(product => {
-    const option = document.createElement('option');
-    option.value = product;
-    option.innerHTML = product;
-    select.appendChild(option);
-  });
-});
+var
+  socket = io(),
 
-socket.on('orders', orders => {
-  document.getElementById('json').innerHTML = JSON.stringify(orders, undefined, 2);
-});
+  ordersSection = element('orders'),
+  productsSelect = element('products'),
+  registerForm = element('register');
 
-document.getElementById('newProduct').onclick = () => {
-  const product = prompt('Product name');
-  if (product !== null) {
-    fetch('/product', createInit({ product }));
-  }
-};
+hideElement(ordersSection);
 
-document.getElementById('order').onsubmit = () => {
-  fetch('/order', createInit({
-    party: document.getElementById('party').value,
-    product: document.getElementById('product').value
-  })).then(response => {
-    if (!response.ok) {
-      alert('You can only modify your own order.');
+registerForm.onsubmit = function () {
+  var userName = element('userName').value.trim();
+  socket.emit('register', userName, function (data) {
+    if (data.success) {
+      element('userNameDisplay').innerHTML = userName;
+      hideElement(registerForm);
+      showElement(ordersSection);
+    } else {
+      alert(data.message);
     }
   });
   return false;
 };
 
-function createInit(data) {
-  return {
-    method: 'post',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  };
+productsSelect.onchange = function () {
+  var productName = productsSelect.options[productsSelect.selectedIndex].value;
+  socket.emit('order', productName);
+};
+
+element('newProduct').onclick = function () {
+  var productName = prompt('Product name');
+  if (productName !== null) {
+    socket.emit('product', productName);
+  }
+};
+
+socket.on('products', function (products) {
+  productsSelect.options.length = 0;
+  [''].concat(products).forEach(function (product) {
+    var option = document.createElement('option');
+    option.value = product;
+    option.innerHTML = product;
+    productsSelect.appendChild(option);
+  });
+});
+
+socket.on('orders', function (orders) {
+  element('json').innerHTML = JSON.stringify(orders, undefined, 2);
+});
+
+function element(id) {
+  return document.getElementById(id);
+}
+
+function hideElement(element) {
+  element.style.display = 'none';
+}
+
+function showElement(element) {
+  element.style.display = 'block';
 }

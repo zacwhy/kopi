@@ -5,13 +5,17 @@
     <title>Orders</title>
   </head>
   <body>
-    <form id="order">
-      <input id="party" placeholder="Name" required />
-      <select id="product"></select>
-      <button>Order</button>
+    <form id="register">
+      <input id="userName" autocapitalize="none" autofocus placeholder="What is your name?" required />
+      <button>Register</button>
     </form>
-    <pre id="json"></pre>
-    <button id="newProduct">New product</button>
+
+    <div id="orders">
+      <span id="userNameDisplay"></span>
+      <select id="products"></select>
+      <button id="newProduct">New product</button>
+      <pre id="json"></pre>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="main.js"></script>

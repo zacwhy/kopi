@@ -10,48 +10,69 @@ const
 
 let
   orders = {},
-  products = config.products;
+  products = config.products,
+  sockets = {};
 
 app.use(express.static(__dirname + '/public'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-app.post('/product', (req, res) => {
-  const product = req.body.product;
-  if (products.indexOf(product) === -1) {
-    products.push(product);
-    emitProducts();
-  }
-  res.end();
-});
-
-app.post('/order', (req, res) => {
-  const
-    address = req.ip,
-    party = req.body.party,
-    product = req.body.product;
-
-  if (typeof orders[party] !== 'undefined' && orders[party].address !== address) {
-    res.status(401)
-  } else {
-    if (product !== '') {
-      orders[party] = { address, product };
-    } else {
-      delete orders[party];
-    }
-    emitOrders();    
-  }
-
-  res.end();
-});
-
 io.on('connection', socket => {
+  const
+    clientIp = socket.request.connection.remoteAddress,
+    socketId = socket.id;
+
   emitProducts();
   emitOrders();
+
+  socket.on('disconnect', () => {
+    const userName = sockets[socketId];
+    if (typeof orders[userName] !== 'undefined' && orders[userName].product === '') {
+      delete orders[userName];
+    }
+    delete sockets[socketId];
+    emitOrders();
+  });
+
+  socket.on('register', (userName, fn) => {
+    if (userName.trim() === '') {
+      fn({
+        success: false,
+        message: 'Name cannot be white spaces'
+      });
+      return;
+    }
+
+    const userNames = Object.keys(orders);
+    if (userNames.indexOf(userName) !== -1 && orders[userName].clientIp !== clientIp) {
+      fn({
+        success: false,
+        message: `There is already someone with name '${userName}'`
+      });
+      return;
+    }
+
+    sockets[socketId] = userName;
+    orders[userName] = orders[userName] || { clientIp, product: '' };
+    fn({ success: true });
+    emitOrders();
+  });
+
+  socket.on('product', productName => {
+    if (products.indexOf(productName) === -1) {
+      products.push(productName);
+      emitProducts();
+    }
+  });
+
+  socket.on('order', productName => {
+    const userName = sockets[socketId];
+    orders[userName].product = productName;
+    emitOrders();
+  });
+
 });
 
 http.listen(3000, () => {
@@ -63,9 +84,8 @@ function emitProducts() {
 }
 
 function emitOrders() {
-  const viewModel = Object.keys(orders).reduce((accumulator, key) => {
-    accumulator[key] = orders[key].product;
-    return accumulator;
+  const ordersViewModel = Object.keys(orders).reduce((accumulator, key) => {
+    return Object.assign({}, accumulator, { [key]: orders[key].product });
   }, {});
-  io.emit('orders', viewModel);
+  io.emit('orders', ordersViewModel);
 }
