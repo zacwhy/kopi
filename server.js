@@ -5,7 +5,7 @@ const
   express = require('express'),
   http = require('http').Server(app),
   io = require('socket.io')(http),
-  config = require('./config.js');
+  config = requireOrDefault('./config.js', { products: [] });
 
 let
   orders = {},
@@ -73,6 +73,17 @@ http.listen(3000, () => {
   console.log('listening on *:3000');
 });
 
+
+function requireOrDefault(module, defaultValue) {
+  try {
+    return require(module);
+  } catch (e) {
+    if (e instanceof Error && e.code === 'MODULE_NOT_FOUND') {
+      return defaultValue;
+    }
+    throw e;
+  }
+}
 
 function register(userName, clientIp) {
   if (userName.trim() === '') {

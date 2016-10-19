@@ -1,7 +1,11 @@
 # Kopi App
 
+## Installing
+```sh
+git clone https://github.com/zacwhy/kopi.git && npm install && npm start
 ```
-$ npm i
-$ cp config.example.js config.js
-$ node index
+
+## Configuring
+```sh
+cp -n config.example.js config.js
 ```
