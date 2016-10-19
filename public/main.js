@@ -17,7 +17,7 @@ registerForm.onsubmit = function () {
       hideElement(registerForm);
       showElement(ordersSection);
     } else {
-      alert(data.message);
+      alert(data.errorCode);
     }
   });
   return false;
